@@ -26,7 +26,7 @@ class UserManager:
 
             # Creating 
             with open(self.userfile_path, mode="w", encoding="utf-8") as userfile:
-                json.dump({}, userfile)
+                json.dump({}, userfile, indent=4)
         except Exception as e:
             self.logger.error(f"Error initializing userfile: {e}")
 
@@ -46,7 +46,7 @@ class UserManager:
 
             # Persist changes
             with open(self.userfile_path, mode="w", encoding="utf-8") as userfile:
-                json.dump(userfile_data, userfile)
+                json.dump(userfile_data, userfile, indent=4)
         except Exception as e:
             self.logger.error(f"Error registering user: {e}")
 
