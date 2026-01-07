@@ -1,2 +1,2 @@
-from ..logger import logger_config
-from .password_utils import *
+from logger import logger_config
+from core.password_utils import *
