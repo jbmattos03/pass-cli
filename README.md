@@ -11,6 +11,15 @@
     - 2.4. [Tip: Alias](#tip-alias)
 
 ## Architecture
+### Requirements
+
++ Python 3.10+
++ A CLI clipboard manager (see [Not Implemented Error](#not-implemented-error))
+
+#### Not Implemented Error
+This application uses [Pyperclip](https://pyperclip.readthedocs.io/en/latest/#) for clipboard related functionalities. Pyperclip requires a copy/paste mechanism, such as xclip, xsel, etc. to have access to your system's clipboard (see [Pyperclip's official documentation](https://pyperclip.readthedocs.io/en/latest/#not-implemented-error)).
+
+**NOTE:** If you use Wayland, I recommend wl-clipboard (it's what I personally use).
 ### Entry structure
 ```python
 entry_name = {
