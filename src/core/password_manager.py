@@ -2,29 +2,35 @@ import nacl.secret
 import nacl.utils
 import nacl.pwhash
 import json, os
-from typing import Optional, Dict, Any
-from src.logger import logger_config
+from typing import Optional, Dict, Any, Tuple
+from logger import logger_config
+from dotenv import load_dotenv
+load_dotenv()
 
 class PasswordManager():
-    def __init__(self, username: str, password: str, vault_path: Optional[str] = None) -> None:
+    def __init__(self, username: str, password: str) -> None:
         # Configure logger
         self.logger = logger_config("PasswordManager")
 
+        # Get vault and key directories from .env
+        vault_dir = os.getenv("VAR_DIR")
+        key_dir = os.getenv("KEY_DIR")
+        
         # Initialize vault path
-        self.vault_path = vault_path if vault_path else f"./.vaults/.{username}/vault/secret.json"
+        self.vault_path = f"{vault_dir if vault_dir else "."}/.vaults/.{username}/vault/secret.json"
 
         # Configure encryption
-        self.key_path = f"./.vaults/.{username}/vault/key.bin"
-        self.key = self.load_or_create_key(password)
+        self.key_path = f"{key_dir if key_dir else "."}/.vaults/.{username}/vault/key.bin"
+        self.key = self._load_or_create_key(password)
         self.box = nacl.secret.SecretBox(self.key)
 
         # Initialize vault
         self.logger.info("Initializing vault")
         if not os.path.exists(self.vault_path):
-            self.initialize_vault()
+            self._initialize_vault()
         self.logger.info("Vault initialized successfully")
     
-    def initialize_vault(self) -> None:
+    def _initialize_vault(self) -> None:
         try:
             # Ensure parent directory exists
             parent_dir = os.path.dirname(self.vault_path)
@@ -39,7 +45,7 @@ class PasswordManager():
         except Exception as e:
             self.logger.error(f"Error initializing vault: {e}")
 
-    def read_vault(self, entry_name: Optional[str] = None) -> Dict[str, Any] | str | None:
+    def read_vault(self, entry_name: Optional[str] = None) -> Dict[str, Any] | None:
         try:
             # Reading vault
             with open(self.vault_path, mode="rb") as vault:
@@ -51,7 +57,7 @@ class PasswordManager():
         except Exception as e:      
             self.logger.error(f"Error reading vault: {e}")
     
-    def add_entry(self, entry_name: str, password: str) -> None:
+    def add_entry(self, entry_name: str, password: str, additional_info: Optional[Dict[str, str]] = None) -> None:
         try:
             # Read vault
             vault_data = self.read_vault()
@@ -61,14 +67,19 @@ class PasswordManager():
             # Add entry
             if (vault_data.get(entry_name, None) != None):
                 raise Exception("Entry already exists")
-            vault_data[entry_name] = password
+            
+
+            vault_data[entry_name] = {
+                "password": password, 
+                "additional_info": additional_info if additional_info else {}
+            }
 
             # Persist changes
             encrypted = self.box.encrypt(json.dumps(vault_data).encode("utf-8"))
             with open(self.vault_path, mode="wb") as vault:
                 vault.write(encrypted)
 
-            self.logger(f"Entry {entry_name} added successfully")
+            self.logger.info(f"Entry {entry_name} added successfully")
         except Exception as e:
             self.logger.error(f"Error adding entry: {e}")
 
@@ -76,7 +87,7 @@ class PasswordManager():
         try:
             # Read vault
             vault_data = self.read_vault()
-            if not vault_data or not isinstance(vault_data, dict):
+            if not vault_data:
                 self.logger.error("Vault is empty")
                 return
             
@@ -93,22 +104,35 @@ class PasswordManager():
         except Exception as e:
             self.logger.error(f"Error removing entry: {e}")
     
-    def update_entry(self, entry_name: str, password: str) -> None:
+    def update_entry(self, entry_name: str, update_info: Dict[str, Any]) -> None:
         try:
             # Read vault
             vault_data = self.read_vault()
-            if not vault_data or not isinstance(vault_data, dict):
+            if not vault_data:
                 self.logger.error("Vault is empty")
                 return
-
-            # Update entry
-            current_value = vault_data.get(entry_name, None)
-            if (current_value is None):
-                self.logger.error("Entry does not exist")
-                return
             
-            vault_data.update({entry_name: password})
+            # Check if any info has been provided
+            if not update_info:
+                self.logger.error("No new info has been provided")
             
+            # Handle entry rename if "entry_name" is in update_info
+            new_entry_name = update_info.pop("entry_name", None)
+            if new_entry_name:
+                if new_entry_name in vault_data:
+                    raise ValueError(f"Entry '{new_entry_name}' already exists")
+                vault_data[new_entry_name] = vault_data.pop(entry_name)
+                entry_name = new_entry_name  # Update reference for further updates
+            
+            # Update other fields
+            entry = vault_data[entry_name]
+            for key, value in update_info.items():
+                if key == "password":
+                    entry["password"] = value
+                else:
+                    # Assume other keys are in additional_info
+                    entry["additional_info"][key] = value
+                  
             # Persist changes
             encrypted = self.box.encrypt(json.dumps(vault_data).encode("utf-8"))
             with open(self.vault_path, mode="wb") as vault:
@@ -118,7 +142,7 @@ class PasswordManager():
         except Exception as e:
             self.logger.error(f"Error updating entry: {e}")
 
-    def load_or_create_key(self, password: str) -> bytes:
+    def _load_or_create_key(self, password: str) -> bytes:
         # Check if a key exists in the user's path
         if not os.path.exists(self.key_path):
             # Salt
