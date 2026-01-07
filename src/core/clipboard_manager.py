@@ -1,8 +1,11 @@
 import pyperclip
 import asyncio
-from src.logger import logger_config
+from logger import logger_config
 
 class ClipboardManager():
+    """
+    Class for managing clipboard functionalities.
+    """
     def __init__(self, n: int = 10) -> None:
         # This attribute informs whether an item is currently copied to the clipboard
         self.active = False
@@ -13,7 +16,7 @@ class ClipboardManager():
         # Logger
         self.logger = logger_config("ClipboardManager")
 
-    def paste_from_clipboard(self) -> str:
+    def _paste_from_clipboard(self) -> str:
         return pyperclip.paste()
     
     async def count_n_seconds(self):
@@ -35,7 +38,7 @@ class ClipboardManager():
         self.active = True
 
         # Save current clipboard content
-        current_content = self.paste_from_clipboard()
+        current_content = self._paste_from_clipboard()
         self.logger.debug(f"Current clipboard content: {current_content}")
 
         # Copy updated content to clipboard
@@ -46,11 +49,11 @@ class ClipboardManager():
         await self.count_n_seconds()
 
         # Delete content from clipboard
-        self.delete_from_clipboard(current_content)
+        self._delete_from_clipboard(current_content)
 
         # Deactivate ClipboardManager
         self.active = False
 
-    def delete_from_clipboard(self, last_content: str):
+    def _delete_from_clipboard(self, last_content: str):
         pyperclip.copy(last_content)
         self.logger.info("Deleted string from clipboard successfully")
