@@ -1,23 +1,25 @@
 import json
 import os
 from typing import Optional
-from src.logger import logger_config
-from src.core.password_utils import *
+from logger import logger_config
+from core.password_utils import *
 
 class UserManager:
+    """
+    Class for managing users in a user base.
+    """
     def __init__(self, userfile_path: Optional[str] = None):
         # Logger config
         self.logger = logger_config("UserManager")
 
         # Initialize userfile path
         self.userfile_path = userfile_path if userfile_path else f"./.users/users.json"
-        self.logger.debug(f"Userfile path: {self.userfile_path}")
 
         # Initialize userfile
         if not os.path.exists(self.userfile_path):
-            self.initialize_userfile()
+            self._initialize_userfile()
 
-    def initialize_userfile(self) -> None:
+    def _initialize_userfile(self) -> None:
         try:
             # Ensure parent directory exists
             parent_dir = os.path.dirname(self.userfile_path)
