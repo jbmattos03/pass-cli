@@ -12,7 +12,7 @@
 
 ## Architecture
 ### Entry structure
-```json
+```python
 entry_name = {
     "password": password,
     "additional_info": {
@@ -23,6 +23,7 @@ entry_name = {
 ```
 
 ### Cryptography
+TBD
 
 ## How to run
 ### Environment variables
