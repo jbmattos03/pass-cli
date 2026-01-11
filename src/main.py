@@ -79,9 +79,11 @@ def main(logger: Any, action: Literal["add", "remove", "update", "get", "show"])
                         if (attribute_name == ":wq"):
                             logger.info(f"Options collected successfully for entry {entry_name}")
                             break
-
-                        attribute_value = input("Enter option value: ")
-                    
+                        
+                        if attribute_name != "password":
+                            attribute_value = input("Enter option value: ")
+                        else:
+                            getpass.getpass("Enter option value: ")
 
                         attributes[attribute_name] = attribute_value
 
@@ -108,7 +110,7 @@ def main(logger: Any, action: Literal["add", "remove", "update", "get", "show"])
                         return
                     
                     # Printing whole entry or remove password
-                    password_question = input("WARNING: Echoing your entry's sensitive information to the terminal could pose a security risk.\nIt is advisable to run this program with --get flag to access your entry's sensitive information.\nWould you like to remove the password from the display? Type 'y' for yes or 'no' for no. """)
+                    password_question = input("WARNING: Echoing your entry's sensitive information to the terminal could pose a security risk.\nIt is advisable to run this program with the --get flag to access your entry's password.\nWould you like to remove the password from the display? Type 'y' for yes or 'n' for no. ")
                     
                     if password_question == "y":
                         del res["password"]
