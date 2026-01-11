@@ -63,6 +63,8 @@ This application expects the following arguments:
 
 ### Tip: Alias
 To make it more convenient to run this project, you can set up an alias for the command above:
+
+**a) Fish**
 ```bash
 set -Ux PASS_CLI_REPO_PATH {path_to_repo}
 alias -s passcli='bash {path_to_repo}/pass-cli'
