@@ -3,17 +3,22 @@ import os
 from typing import Optional
 from logger import logger_config
 from core.password_utils import *
+from dotenv import load_dotenv
+load_dotenv()
 
 class UserManager:
     """
     Class for managing users in a user base.
     """
-    def __init__(self, userfile_path: Optional[str] = None):
+    def __init__(self):
         # Logger config
         self.logger = logger_config("UserManager")
 
+        # Get user directory path from env
+        user_dir = os.getenv("USER_DIR")
+
         # Initialize userfile path
-        self.userfile_path = userfile_path if userfile_path else f"./.users/users.json"
+        self.userfile_path = f"{user_dir if user_dir else "."}/.users/users.json"
 
         # Initialize userfile
         if not os.path.exists(self.userfile_path):
