@@ -13,14 +13,15 @@ class PasswordManager():
         self.logger = logger_config("PasswordManager")
 
         # Get vault and key directories from .env
-        vault_dir = os.getenv("VAR_DIR")
+        vault_dir = os.getenv("VAULT_DIR")
         key_dir = os.getenv("KEY_DIR")
         
         # Initialize vault path
-        self.vault_path = f"{vault_dir if vault_dir else "."}/.vaults/.{username}/vault/secret.json"
+        self.vault_base_path = f"{vault_dir if vault_dir else "."}/.vaults/.{username}/vault/"
+        self.vault_path = os.path.join(self.vault_base_path, "secret.json")
 
         # Configure encryption
-        self.key_path = f"{key_dir if key_dir else "."}/.vaults/.{username}/vault/key.bin"
+        self.key_path = os.path.join(key_dir if key_dir else self.vault_base_path, "key.bin")
         self.key = self._load_or_create_key(password)
         self.box = nacl.secret.SecretBox(self.key)
 
